@@ -31,8 +31,12 @@ public class OptimUnit : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        Profiler.BeginSample("Handling Time");
         HandleTime();
+        Profiler.EndSample();
 
+
+        Profiler.BeginSample("Rotating");
         var t = transform;
 
         if(transform.position.x <= 0)
@@ -44,9 +48,15 @@ public class OptimUnit : MonoBehaviour
             transform.Rotate(0,0, currentAngularVelocity * Time.deltaTime);
         else if(transform.position.z < 0)
             transform.Rotate(0,0, -currentAngularVelocity * Time.deltaTime);
-        
-        Move();
+        Profiler.EndSample();
 
+
+        Profiler.BeginSample("Moving");
+        Move();
+        Profiler.EndSample();
+
+
+        Profiler.BeginSample("Boundry Check");
         //check if we are moving away from the zone and invert velocity if this is the case
         if (transform.position.x > areaSize.x && currentVelocity.x > 0)
         {
@@ -69,6 +79,7 @@ public class OptimUnit : MonoBehaviour
             currentVelocity.z *= -1;
             PickNewVelocityChangeTime();
         }
+        Profiler.EndSample();
     }
 
 
@@ -95,20 +106,8 @@ public class OptimUnit : MonoBehaviour
     }
 
     void Move()
-    {
-        Vector3 position = transform.position;
-        
-        float distanceToCenter = Vector3.Distance(Vector3.zero, position);
-        float speed = 0.5f + distanceToCenter / areaSize.magnitude;
-        
-        int steps = Random.Range(1000, 2000);
-        float increment = Time.deltaTime / steps;
-        for (int i = 0; i < steps; ++i)
-        {
-            position += currentVelocity * increment * speed;
-        }
-        
-        transform.position = position;
+    {      
+        transform.position = transform.position + currentVelocity * Time.deltaTime;
     }
 
     private void HandleTime()
